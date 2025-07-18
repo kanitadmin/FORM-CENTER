@@ -43,13 +43,15 @@ const getEmailFormHtml = () => `
                     
                     <div class="mb-3">
                         <label class="form-label">ประเภทอีเมลที่ต้องการ <span class="text-danger">*</span></label>
-                        <div class="form-check">
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="email_type" id="type_department" value="อีเมลส่วนงาน" required>
                             <label class="form-check-label" for="type_department">อีเมลส่วนงาน</label>
+                            <div class="form-text mt-0" style="color: red; font-weight: bold;">*เป็นกล่องจดหมายส่วนตัวของอีเมลส่วนงาน</div>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="email_type" id="type_group" value="อีเมลกลุ่ม">
                             <label class="form-check-label" for="type_group">อีเมลกลุ่ม</label>
+                            <div class="form-text mt-0" style="color: red; font-weight: bold;">*เป็นกลุ่มอีเมลที่ส่งข้อความไปยังสมาชิกหลายคนพร้อมกัน</div>
                         </div>
                     </div>
 
@@ -59,7 +61,7 @@ const getEmailFormHtml = () => `
                             <label for="desired_email" class="form-label">ชื่ออีเมลที่ต้องการ (ภาษาอังกฤษ) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="desired_email" name="desired_email" pattern="[a-zA-Z0-9._%+-]+">
-                                <span class="input-group-text">@yourdomain.com</span>
+                                <span class="input-group-text">@buu.ac.th</span>
                             </div>
                         </div>
                     </div>
