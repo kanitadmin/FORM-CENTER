@@ -21,8 +21,19 @@ const getMenuHtml = () => `
                 <h1 class="display-5 mt-2">ระบบฟอร์มออนไลน์</h1>
                 <p class="lead text-muted">กรุณาเลือกแบบฟอร์มที่ท่านต้องการใช้งาน</p>
             </div>
-            <div class="row justify-content-center g-4">
-                <div class="col-md-6 col-lg-5">
+
+            <!-- Search Input -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8 col-lg-7">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="formSearchInput" class="form-control" placeholder="ค้นหาฟอร์มที่ต้องการ...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-list" class="row justify-content-center g-4">
+                <div class="col-12 col-md-6 col-lg-4 form-card">
                     <div class="card card-menu text-center h-100">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="mb-3"><i class="bi bi-hdd-stack-fill" style="font-size: 3rem; color: #0d6efd;"></i></div>
@@ -32,7 +43,7 @@ const getMenuHtml = () => `
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-5">
+                <div class="col-12 col-md-6 col-lg-4 form-card">
                     <div class="card card-menu text-center h-100">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="mb-3"><i class="bi bi-globe2" style="font-size: 3rem; color: #198754;"></i></div>
@@ -42,7 +53,7 @@ const getMenuHtml = () => `
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-5">
+                <div class="col-12 col-md-6 col-lg-4 form-card">
                     <div class="card card-menu text-center h-100">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="mb-3"><i class="bi bi-envelope-at-fill" style="font-size: 3rem; color: #6f42c1;"></i></div>
@@ -53,8 +64,24 @@ const getMenuHtml = () => `
                     </div>
                 </div>
             </div>
-            <footer class="my-5 pt-5 text-muted text-center text-small"><p class="mb-1">&copy; 2025 Your Company Name</p></footer>
+            <footer class="my-5 pt-5 text-muted text-center text-small"><p class="mb-1">&copy; 2025 Computer Center Burapha University</p></footer>
         </div>
+
+        <script>
+            document.getElementById('formSearchInput').addEventListener('keyup', function() {
+                let searchTerm = this.value.toLowerCase();
+                let formCards = document.querySelectorAll('.form-card');
+                
+                formCards.forEach(function(card) {
+                    let title = card.querySelector('.card-title').textContent.toLowerCase();
+                    if (title.includes(searchTerm)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        </script>
     </body>
     </html>
 `;
