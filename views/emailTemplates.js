@@ -9,10 +9,13 @@ const getEmailFormHtml = () => `
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <style>
-            body { background-color: #f0f2f5; } .container { max-width: 850px; }
+            body { background-color: #f0f2f5; }
+            .container { max-width: 850px; }
             .form-header { background: linear-gradient(135deg, #6f42c1, #9a6aff); color: white; padding: 2rem; border-radius: 0.5rem 0.5rem 0 0; text-align: center; }
             .card { border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 0 0 0.5rem 0.5rem; }
-            #group_members_div { display: none; }
+            #department_email_section, #group_email_section { display: none; }
+            .member-row { animation: fadeIn 0.5s; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         </style>
     </head>
     <body>
@@ -37,25 +40,39 @@ const getEmailFormHtml = () => `
                     <div class="mb-3"><label for="purpose" class="form-label">วัตถุประสงค์ <span class="text-danger">*</span></label><textarea class="form-control" name="purpose" rows="4" required></textarea></div>
                     <hr class="my-4">
                     <h5 class="mb-4 text-primary"><i class="bi bi-envelope-plus-fill me-2"></i>ส่วนที่ 3: รายละเอียดคำขออีเมล</h5>
+                    
                     <div class="mb-3">
-                        <label for="email_type" class="form-label">ประเภทอีเมลที่ต้องการ <span class="text-danger">*</span></label>
-                        <select class="form-select" name="email_type" id="email_type" required onchange="toggleGroupMembers()">
-                            <option value="" selected disabled>-- เลือก --</option>
-                            <option value="อีเมลส่วนงาน">อีเมลส่วนงาน</option>
-                            <option value="อีเมลกลุ่ม">อีเมลกลุ่ม</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="desired_email" class="form-label">ชื่ออีเมลที่ต้องการ (ภาษาอังกฤษ) <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="desired_email" required pattern="[a-zA-Z0-9._%+-]+">
-                            <span class="input-group-text">@yourdomain.com</span>
+                        <label class="form-label">ประเภทอีเมลที่ต้องการ <span class="text-danger">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="email_type" id="type_department" value="อีเมลส่วนงาน" required>
+                            <label class="form-check-label" for="type_department">อีเมลส่วนงาน</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="email_type" id="type_group" value="อีเมลกลุ่ม">
+                            <label class="form-check-label" for="type_group">อีเมลกลุ่ม</label>
                         </div>
                     </div>
-                    <div class="mb-3" id="group_members_div">
-                        <label for="group_members" class="form-label">รายชื่ออีเมลสมาชิกในกลุ่ม (คั่นด้วยจุลภาค ,)</label>
-                        <textarea class="form-control" name="group_members" id="group_members" rows="3"></textarea>
+
+                    <!-- Section for Department Email -->
+                    <div id="department_email_section">
+                        <div class="mb-3">
+                            <label for="desired_email" class="form-label">ชื่ออีเมลที่ต้องการ (ภาษาอังกฤษ) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="desired_email" name="desired_email" pattern="[a-zA-Z0-9._%+-]+">
+                                <span class="input-group-text">@yourdomain.com</span>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Section for Group Email -->
+                    <div id="group_email_section">
+                        <label class="form-label">รายชื่อสมาชิกในกลุ่ม (สูงสุด 8 คน)</label>
+                        <div id="member_list">
+                            <!-- Member rows will be added here -->
+                        </div>
+                        <button type="button" id="add_member_btn" class="btn btn-outline-primary btn-sm mt-2"><i class="bi bi-plus-circle-fill me-1"></i>เพิ่มสมาชิก</button>
+                    </div>
+
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">ส่งคำขอ</button>
                         <a href="/" class="btn btn-outline-secondary">กลับหน้าหลัก</a>
@@ -64,24 +81,121 @@ const getEmailFormHtml = () => `
             </div></div>
         </div>
         <script>
-            function toggleGroupMembers() {
-                const emailType = document.getElementById('email_type').value;
-                const groupMembersDiv = document.getElementById('group_members_div');
-                const groupMembersInput = document.getElementById('group_members');
-                if (emailType === 'อีเมลกลุ่ม') {
-                    groupMembersDiv.style.display = 'block';
-                    groupMembersInput.required = true;
-                } else {
-                    groupMembersDiv.style.display = 'none';
-                    groupMembersInput.required = false;
+            document.addEventListener('DOMContentLoaded', function() {
+                const typeDepartmentRadio = document.getElementById('type_department');
+                const typeGroupRadio = document.getElementById('type_group');
+                const departmentSection = document.getElementById('department_email_section');
+                const groupSection = document.getElementById('group_email_section');
+                const desiredEmailInput = document.getElementById('desired_email');
+                const memberList = document.getElementById('member_list');
+                const addMemberBtn = document.getElementById('add_member_btn');
+                const maxMembers = 8;
+
+                function toggleSections() {
+                    if (typeDepartmentRadio.checked) {
+                        departmentSection.style.display = 'block';
+                        desiredEmailInput.required = true;
+                        groupSection.style.display = 'none';
+                        clearMembers();
+                    } else if (typeGroupRadio.checked) {
+                        departmentSection.style.display = 'block'; // Also show desired email for group
+                        desiredEmailInput.required = true;
+                        groupSection.style.display = 'block';
+                        if (memberList.children.length === 0) {
+                           addMemberRow(); // Add the first member row automatically
+                        }
+                    } else {
+                        departmentSection.style.display = 'none';
+                        groupSection.style.display = 'none';
+                        desiredEmailInput.required = false;
+                        clearMembers();
+                    }
                 }
-            }
+
+                function clearMembers() {
+                    memberList.innerHTML = '';
+                    updateAddButtonState();
+                }
+
+                function updateAddButtonState() {
+                    const memberCount = memberList.children.length;
+                    addMemberBtn.disabled = memberCount >= maxMembers;
+                    addMemberBtn.textContent = memberCount >= maxMembers ? 'จำกัดสมาชิกสูงสุด 8 คน' : 'เพิ่มสมาชิก';
+                }
+
+                function addMemberRow() {
+                    if (memberList.children.length >= maxMembers) return;
+
+                    const memberIndex = memberList.children.length;
+                    const newRow = document.createElement('div');
+                    newRow.className = 'row g-2 mb-2 member-row';
+
+                    // Create name column
+                    const nameCol = document.createElement('div');
+                    nameCol.className = 'col-md';
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.name = 'members[' + memberIndex + '][name]';
+                    nameInput.className = 'form-control';
+                    nameInput.placeholder = 'ชื่อ-นามสกุล';
+                    nameInput.required = true;
+                    nameCol.appendChild(nameInput);
+
+                    // Create email column
+                    const emailCol = document.createElement('div');
+                    emailCol.className = 'col-md';
+                    const emailInput = document.createElement('input');
+                    emailInput.type = 'email';
+                    emailInput.name = 'members[' + memberIndex + '][email]';
+                    emailInput.className = 'form-control';
+                    emailInput.placeholder = 'อีเมล';
+                    emailInput.required = true;
+                    emailCol.appendChild(emailInput);
+
+                    // Create remove button column
+                    const removeCol = document.createElement('div');
+                    removeCol.className = 'col-auto d-flex align-items-center';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-danger btn-sm remove-member-btn';
+                    removeBtn.innerHTML = '<i class="bi bi-trash-fill"></i>';
+                    removeCol.appendChild(removeBtn);
+
+                    newRow.appendChild(nameCol);
+                    newRow.appendChild(emailCol);
+                    newRow.appendChild(removeCol);
+                    
+                    memberList.appendChild(newRow);
+                    updateAddButtonState();
+                }
+
+                typeDepartmentRadio.addEventListener('change', toggleSections);
+                typeGroupRadio.addEventListener('change', toggleSections);
+                addMemberBtn.addEventListener('click', addMemberRow);
+
+                memberList.addEventListener('click', function(e) {
+                    if (e.target.closest('.remove-member-btn')) {
+                        e.target.closest('.member-row').remove();
+                        updateAddButtonState();
+                    }
+                });
+
+                // Initial state
+                toggleSections();
+            });
         </script>
     </body>
     </html>
 `;
 
-const getEmailSuccessHtml = (data) => `
+const getEmailSuccessHtml = (data) => {
+    let membersHtml = '';
+    if (data.email_type === 'อีเมลกลุ่ม' && data.members) {
+        const membersList = Object.values(data.members).map(m => `<li>${m.name} (${m.email})</li>`).join('');
+        membersHtml = `<h6>สมาชิกในกลุ่ม:</h6><ul>${membersList}</ul>`;
+    }
+
+    return `
     <!DOCTYPE html>
     <html lang="th">
     <head><title>ส่งข้อมูลสำเร็จ</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"></head>
@@ -96,9 +210,9 @@ const getEmailSuccessHtml = (data) => `
                         <li><strong>ผู้รับผิดชอบ:</strong> ${data.responsible_person} (${data.organization_name})</li>
                         <li><strong>อีเมลที่ขอ:</strong> ${data.desired_email}@yourdomain.com</li>
                         <li><strong>ประเภท:</strong> ${data.email_type}</li>
-                        ${data.email_type === 'อีเมลกลุ่ม' ? `<li><strong>สมาชิก:</strong> ${data.group_members}</li>` : ''}
                         <li><strong>วัตถุประสงค์:</strong> ${data.purpose}</li>
                     </ul>
+                    ${membersHtml}
                 </div>
                 <a href="/request-email" class="btn btn-primary mt-4">กรอกฟอร์มอีกครั้ง</a>
                 <a href="/" class="btn btn-secondary mt-2">กลับไปหน้าเมนู</a>
@@ -107,5 +221,6 @@ const getEmailSuccessHtml = (data) => `
     </body>
     </html>
 `;
+};
 
 module.exports = { getEmailFormHtml, getEmailSuccessHtml };

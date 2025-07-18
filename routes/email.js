@@ -23,8 +23,21 @@ router.post('/request-email', async (req, res) => {
         purpose:            sanitize(body.purpose),
         email_type:         sanitize(body.email_type),
         desired_email:      sanitize(body.desired_email),
-        group_members:      sanitize(body.group_members),
+        members:            body.members || null, // รับข้อมูลสมาชิก
     };
+
+    // Sanitize member data if it exists
+    if (data.email_type === 'อีเมลกลุ่ม' && data.members) {
+        // body-parser จะแปลง members[0][name] เป็น object, เราจะแปลงให้เป็น array of objects
+        const membersArray = Object.values(data.members);
+        data.members = membersArray.map(member => ({
+            name: sanitize(member.name),
+            email: sanitize(member.email)
+        }));
+    } else {
+        // ถ้าไม่ใช่อีเมลกลุ่ม ก็ไม่ควรมีข้อมูลสมาชิก
+        data.members = null;
+    }
 
     // ตรวจสอบว่ามี Webhook URL หรือไม่
     if (N8N_EMAIL_WEBHOOK_URL && N8N_EMAIL_WEBHOOK_URL.includes('http')) {
@@ -38,7 +51,10 @@ router.post('/request-email', async (req, res) => {
         console.warn('Email Webhook URL is not set in config.js.');
     }
 
-    res.send(getEmailSuccessHtml(data));
+    // ส่งข้อมูลกลับไปเพื่อแสดงผลในหน้า success
+    // เราจะส่งข้อมูล members ที่ผ่านการ sanitize แล้วกลับไป
+    const displayData = { ...body, members: data.members };
+    res.send(getEmailSuccessHtml(displayData));
 });
 
 module.exports = router;
